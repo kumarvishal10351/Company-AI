@@ -4,13 +4,11 @@ const MODELS_URL = 'https://openrouter.ai/api/v1/models';
 
 export async function analyzeCompany(data, model, apiKey) {
   const prompt = buildPrompt(data);
-  const key = apiKey || process.env.MISTRAL_API_KEY || process.env.OPENROUTER_API_KEY;
+  const key = apiKey || process.env.OPENROUTER_API_KEY || process.env.MISTRAL_API_KEY;
 
-  if (!key) throw new Error('AI API key is required (Mistral or OpenRouter)');
+  if (!key) throw new Error('AI API key is required');
 
-  // Determine endpoint: check if it's a Mistral direct API key or OpenRouter key
-  const isMistralKey = !key.startsWith('sk-or-') || model?.includes('mistral');
-  const selectedModel = isMistralKey ? (model || 'mistral-large-latest') : (model || 'mistralai/mistral-large');
+  const selectedModel = model || 'mistralai/mistral-large';
 
   const messages = [
     {
@@ -20,38 +18,11 @@ export async function analyzeCompany(data, model, apiKey) {
     { role: 'user', content: prompt }
   ];
 
-  // First try direct Mistral API if applicable, fallback to OpenRouter if error
   let res;
   let lastError;
 
-  if (isMistralKey) {
-    try {
-      res = await fetch(MISTRAL_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          model: selectedModel.replace('mistralai/', ''),
-          messages,
-          temperature: 0.2,
-          response_format: { type: 'json_object' }
-        }),
-      });
-      if (!res.ok) {
-        lastError = await res.text();
-        res = null;
-      }
-    } catch (e) {
-      lastError = e.message;
-      res = null;
-    }
-  }
-
-  // Fallback or standard OpenRouter request
-  if (!res) {
+  // Primary OpenRouter endpoint supporting ANY OpenRouter AI model
+  try {
     res = await fetch(OPENROUTER_URL, {
       method: 'POST',
       headers: {
@@ -68,29 +39,44 @@ export async function analyzeCompany(data, model, apiKey) {
       }),
     });
 
-    if (!res.ok && (res.status === 404 || res.status === 400)) {
-      console.warn(`[OpenRouter Warning] Model ${selectedModel} failed (${res.status}), retrying with mistralai/mistral-large...`);
-      res = await fetch(OPENROUTER_URL, {
+    if (!res.ok) {
+      lastError = await res.text();
+      res = null;
+    }
+  } catch (e) {
+    lastError = e.message;
+    res = null;
+  }
+
+  // Resilient fallback to direct Mistral API if OpenRouter key returns 404/error
+  if (!res) {
+    try {
+      res = await fetch(MISTRAL_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${key}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://company-research.vercel.app',
-          'X-Title': 'Company Research Assistant',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
-          model: 'mistralai/mistral-large',
+          model: 'mistral-large-latest',
           messages,
           temperature: 0.2,
-          max_tokens: 4096,
+          response_format: { type: 'json_object' }
         }),
       });
+      if (!res.ok) {
+        lastError = await res.text();
+        res = null;
+      }
+    } catch (e) {
+      lastError = e.message;
+      res = null;
     }
   }
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`AI API error ${res.status}: ${err || lastError}`);
+  if (!res || !res.ok) {
+    throw new Error(`AI API Error: ${lastError || 'Failed to connect to AI provider'}`);
   }
 
   const result = await res.json();
@@ -150,38 +136,47 @@ REQUIREMENTS:
 }
 
 export async function getAvailableModels(apiKey) {
-  const res = await fetch(MODELS_URL, {
-    headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {},
-  });
+  try {
+    const res = await fetch(MODELS_URL, {
+      headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {},
+    });
 
-  if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
+    if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
 
-  const data = await res.json();
-  const popular = [
-    'google/gemini-2.0-flash-001',
-    'google/gemini-2.5-flash-preview',
-    'anthropic/claude-sonnet-4',
-    'anthropic/claude-3.5-sonnet',
-    'openai/gpt-4o-mini',
-    'openai/gpt-4o',
-    'meta-llama/llama-3.1-70b-instruct',
-    'deepseek/deepseek-chat',
-    'mistralai/mistral-large',
-  ];
+    const data = await res.json();
+    const popular = [
+      'mistralai/mistral-large',
+      'google/gemini-2.0-flash-001',
+      'openai/gpt-4o-mini',
+      'openai/gpt-4o',
+      'anthropic/claude-3.5-sonnet',
+      'deepseek/deepseek-chat',
+      'meta-llama/llama-3.3-70b-instruct',
+    ];
 
-  const models = data.data
-    ?.filter(m => m.id)
-    .map(m => ({
-      id: m.id,
-      name: m.name || m.id,
-      isPopular: popular.includes(m.id),
-    }))
-    .sort((a, b) => {
-      if (a.isPopular && !b.isPopular) return -1;
-      if (!a.isPopular && b.isPopular) return 1;
-      return a.name.localeCompare(b.name);
-    })
-    .slice(0, 80);
+    const models = data.data
+      ?.filter(m => m.id)
+      .map(m => ({
+        id: m.id,
+        name: m.name || m.id,
+        isPopular: popular.includes(m.id),
+      }))
+      .sort((a, b) => {
+        if (a.isPopular && !b.isPopular) return -1;
+        if (!a.isPopular && b.isPopular) return 1;
+        return a.name.localeCompare(b.name);
+      })
+      .slice(0, 80);
 
-  return models || [];
+    return models || [];
+  } catch {
+    return [
+      { id: 'mistralai/mistral-large', name: 'Mistral Large (OpenRouter)', isPopular: true },
+      { id: 'google/gemini-2.0-flash-001', name: 'Google Gemini 2.0 Flash', isPopular: true },
+      { id: 'openai/gpt-4o-mini', name: 'OpenAI GPT-4o Mini', isPopular: true },
+      { id: 'openai/gpt-4o', name: 'OpenAI GPT-4o', isPopular: true },
+      { id: 'anthropic/claude-3.5-sonnet', name: 'Anthropic Claude 3.5 Sonnet', isPopular: true },
+      { id: 'deepseek/deepseek-chat', name: 'DeepSeek V3 Chat', isPopular: true },
+    ];
+  }
 }

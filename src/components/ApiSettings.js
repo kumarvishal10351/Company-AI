@@ -48,10 +48,10 @@ export default function ApiSettings({ settings, onSave }) {
           <div>
             <h2 className="text-lg font-bold text-[#ECECF1] flex items-center gap-2">
               <span className="material-symbols-outlined text-[#3B82F6]">settings</span>
-              API & Model Configuration
+              API & OpenRouter Model Configuration
             </h2>
             <p className="text-[13px] text-[#8E8EA0] mt-1">
-              Configure backend LLM models, web search credentials, and execution parameters.
+              Select any AI model available on OpenRouter to power your company research synthesis.
             </p>
           </div>
 
@@ -81,7 +81,7 @@ export default function ApiSettings({ settings, onSave }) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[13px] font-semibold text-[#ECECF1]">
-                AI Provider Key (OpenRouter / Mistral)
+                OpenRouter AI Provider Key
               </label>
               <span className="text-[10px] text-[#10B981] font-mono bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
                 {form.openrouterKey ? 'KEY_CONFIGURED' : 'NOT_SET'}
@@ -106,7 +106,7 @@ export default function ApiSettings({ settings, onSave }) {
               </button>
             </div>
             <p className="text-[11px] text-[#8E8EA0]">
-              Used to generate multi-step company synthesis via OpenRouter API.
+              Powers multi-step company synthesis using any LLM on OpenRouter.
             </p>
           </div>
 
@@ -148,26 +148,28 @@ export default function ApiSettings({ settings, onSave }) {
         <div className="space-y-4 border-t border-white/[0.08] pt-5">
           <h3 className="text-[14px] font-bold text-[#ECECF1] flex items-center gap-2">
             <span className="material-symbols-outlined text-[#3B82F6]">psychology</span>
-            Synthesis Model Engine
+            OpenRouter Synthesis Model Engine
           </h3>
 
           <div className="space-y-2">
             <label className="text-[13px] font-semibold text-[#ECECF1]">
-              Active LLM Model
+              Active LLM Model Choice
             </label>
             <select
-              value={form.model || 'mistral-large-latest'}
+              value={form.model || 'mistralai/mistral-large'}
               onChange={(e) => update('model', e.target.value)}
               className="w-full bg-[#000000] border border-white/[0.08] rounded-xl py-2.5 px-4 text-[13px] text-[#ECECF1] focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-[#3B82F6]/20 transition-all cursor-pointer"
             >
-              <option value="mistral-large-latest">Mistral: Large (mistral-large-latest)</option>
-              <option value="mistral-small-latest">Mistral: Small (mistral-small-latest)</option>
-              <option value="mistralai/mistral-large">OpenRouter: Mistral Large</option>
-              <option value="google/gemini-2.0-flash-001">Google: Gemini 2.0 Flash</option>
+              <option value="mistralai/mistral-large">Mistral Large (OpenRouter)</option>
+              <option value="google/gemini-2.0-flash-001">Google Gemini 2.0 Flash</option>
+              <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini</option>
+              <option value="openai/gpt-4o">OpenAI GPT-4o</option>
+              <option value="anthropic/claude-3.5-sonnet">Anthropic Claude 3.5 Sonnet</option>
+              <option value="deepseek/deepseek-chat">DeepSeek V3 Chat</option>
               {models.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.isPopular ? '★ ' : ''}
-                  {m.name}
+                  {m.name} ({m.id})
                 </option>
               ))}
             </select>

@@ -33,19 +33,20 @@ export default function TopAppBar({
         </div>
       </div>
 
-      {/* Right Controls */}
+      {/* Right Controls: OpenRouter Model Selector */}
       <div className="flex items-center gap-2">
-        {/* Model Selector Dropdown */}
         <div className="relative flex items-center">
           <select
-            value={model || 'mistral-large-latest'}
+            value={model || 'mistralai/mistral-large'}
             onChange={(e) => setModel(e.target.value)}
             className="bg-[#212121] border border-white/[0.08] rounded-lg py-1.5 pl-3 pr-7 text-[12px] font-medium text-[#ececf1] hover:bg-[#2f2f2f] focus:outline-none transition-all cursor-pointer appearance-none"
           >
-            <option value="mistral-large-latest">Mistral Large (Fast & Capable)</option>
-            <option value="mistral-small-latest">Mistral Small (Lightweight)</option>
-            <option value="mistralai/mistral-large">OpenRouter Mistral</option>
+            <option value="mistralai/mistral-large">Mistral Large (OpenRouter)</option>
             <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+            <option value="openai/gpt-4o">GPT-4o</option>
+            <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+            <option value="deepseek/deepseek-chat">DeepSeek V3 Chat</option>
           </select>
           <span className="material-symbols-outlined text-[16px] text-[#8e8ea0] absolute right-2 pointer-events-none">
             expand_more
