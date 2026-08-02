@@ -6,8 +6,8 @@ export async function sendToDiscord({ botToken, channelId, applicantName, applic
   const formData = new FormData();
 
   const embed = {
-    title: '📊 Company Research Report',
-    color: 0xf5a623,
+    title: '📊 Relu Consultancy Report',
+    color: 0x3B82F6,
     fields: [
       { name: 'Applicant Name', value: applicantName || 'N/A', inline: true },
       { name: 'Applicant Email', value: applicantEmail || 'N/A', inline: true },
@@ -16,7 +16,7 @@ export async function sendToDiscord({ botToken, channelId, applicantName, applic
       { name: 'Company Website', value: companyWebsite || 'N/A', inline: true },
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: 'Company Research Assistant' },
+    footer: { text: 'Relu Consultancy' },
   };
 
   formData.append('payload_json', JSON.stringify({ embeds: [embed] }));

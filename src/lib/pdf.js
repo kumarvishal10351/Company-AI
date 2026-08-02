@@ -38,7 +38,7 @@ export async function generatePDF(report) {
   y = 18;
   doc.setFontSize(8);
   doc.setTextColor(...colors.muted);
-  doc.text('INTELLIGEN ENTERPRISE SYNTHESIS REPORT', margin, y);
+  doc.text('RELU CONSULTANCY SYNTHESIS REPORT', margin, y);
 
   y += 8;
   doc.setFontSize(20);
@@ -180,7 +180,7 @@ export async function generatePDF(report) {
     doc.setPage(i);
     doc.setFontSize(7);
     doc.setTextColor(...colors.muted);
-    doc.text(`Intelligen System v1.0 — Generated ${new Date().toLocaleDateString()}`, margin, 290);
+    doc.text(`Relu Consultancy v1.0 — Generated ${new Date().toLocaleDateString()}`, margin, 290);
     doc.text(`Page ${i} of ${pageCount}`, W - margin - 20, 290);
   }
 

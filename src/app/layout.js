@@ -2,9 +2,9 @@ import Script from 'next/script';
 import './globals.css';
 
 export const metadata = {
-  title: 'Intelligen System — Autonomous Enterprise Intelligence',
+  title: 'Relu Consultancy — Autonomous Enterprise Intelligence',
   description: 'Research and analyze any enterprise with real-time web crawling, LLM synthesis, and structured intelligence reports.',
-  keywords: 'company research, AI, competitor analysis, business intelligence, Stitch MCP',
+  keywords: 'company research, AI, competitor analysis, business intelligence, Relu Consultancy',
 };
 
 export default function RootLayout({ children }) {

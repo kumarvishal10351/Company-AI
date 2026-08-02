@@ -27,7 +27,7 @@ export default function TopAppBar({
 
         <div className="flex items-center gap-1.5 cursor-pointer">
           <span className="text-[16px] font-semibold text-[#ececf1] tracking-tight flex items-center gap-1">
-            Company AI
+            Relu Consultancy
             <span className="material-symbols-outlined text-[18px] text-[#8e8ea0]">expand_more</span>
           </span>
         </div>

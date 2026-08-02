@@ -29,7 +29,7 @@ export async function analyzeCompany(data, model, apiKey) {
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://company-research.vercel.app',
-        'X-Title': 'Company Research Assistant',
+        'X-Title': 'Relu Consultancy',
       },
       body: JSON.stringify({
         model: selectedModel,

@@ -82,7 +82,7 @@ export default function HeroSection({ onSearch, isSearching }) {
 
       {/* Minimal Footer Disclaimer */}
       <div className="text-[11px] text-[#8e8ea0]/70 pt-6">
-        Company AI is powered by real-time web synthesis. Terms & Privacy Policy apply.
+        Relu Consultancy is powered by real-time web synthesis. Terms & Privacy Policy apply.
       </div>
     </div>
   );

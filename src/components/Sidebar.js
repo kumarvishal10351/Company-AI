@@ -40,8 +40,8 @@ export default function Sidebar({
                 <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-black font-bold text-xs shadow-sm">
                   <span className="material-symbols-outlined text-[16px] text-black">smart_toy</span>
                 </div>
-                <span className="font-semibold text-[14px] text-[#ececf1] tracking-tight flex items-center gap-1">
-                  Company AI
+                <span className="font-semibold text-[15px] text-[#ececf1] tracking-tight flex items-center gap-1">
+                  Relu Consultancy
                   <span className="material-symbols-outlined text-[16px] text-[#8e8ea0]">expand_more</span>
                 </span>
               </div>
@@ -171,7 +171,7 @@ export default function Sidebar({
                   Enterprise User
                 </div>
                 <div className="text-[10px] text-[#8e8ea0] truncate">
-                  Company AI Enterprise
+                  Relu Consultancy Enterprise
                 </div>
               </div>
             )}
