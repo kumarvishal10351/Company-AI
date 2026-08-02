@@ -316,7 +316,7 @@ export default function Home() {
                       onChange={(e) => setChatPrompt(e.target.value)}
                       disabled={isResearching}
                       placeholder="Research another company or website..."
-                      className="w-full bg-transparent border-none outline-none px-3 py-2 text-[14px] text-[#ececf1] placeholder-[#8e8ea0]/70"
+                      className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none shadow-none px-3 py-2 text-[14px] text-[#ececf1] placeholder-[#8e8ea0]/70"
                     />
                     <button
                       type="submit"

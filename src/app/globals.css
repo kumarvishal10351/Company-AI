@@ -10,6 +10,11 @@
   box-sizing: border-box;
 }
 
+input:focus, textarea:focus, select:focus, button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 :root {
   /* Pure Black Color Tokens */
   --chat-bg: #000000;

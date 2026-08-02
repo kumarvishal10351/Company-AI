@@ -47,7 +47,7 @@ export default function HeroSection({ onSearch, isSearching }) {
             onChange={(e) => setInput(e.target.value)}
             disabled={isSearching}
             placeholder="Research Microsoft or https://microsoft.com"
-            className="w-full bg-transparent border-none outline-none px-3 py-2.5 text-[15px] text-[#ececf1] placeholder-[#8e8ea0]/70 font-sans"
+            className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none shadow-none px-3 py-2.5 text-[15px] text-[#ececf1] placeholder-[#8e8ea0]/70 font-sans"
           />
 
           {/* Up Arrow Send Button inside White/Dark Circle on Right */}
