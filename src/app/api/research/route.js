@@ -15,9 +15,12 @@ export async function POST(req) {
 
   const { input, openrouterKey, serperKey, model } = body;
 
+  const activeOpenrouterKey = openrouterKey || process.env.OPENROUTER_API_KEY || process.env.MISTRAL_API_KEY;
+  const activeSerperKey = serperKey || process.env.SERPER_API_KEY;
+
   if (!input?.trim()) return Response.json({ error: 'Company Name or Website URL is required' }, { status: 400 });
-  if (!openrouterKey) return Response.json({ error: 'OpenRouter API key is required' }, { status: 400 });
-  if (!serperKey) return Response.json({ error: 'Serper API key is required' }, { status: 400 });
+  if (!activeOpenrouterKey) return Response.json({ error: 'OpenRouter API key is required. Please provide it in Settings or configure OPENROUTER_API_KEY.' }, { status: 400 });
+  if (!activeSerperKey) return Response.json({ error: 'Serper API key is required. Please provide it in Settings or configure SERPER_API_KEY.' }, { status: 400 });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -37,7 +40,7 @@ export async function POST(req) {
           companyUrl = input.startsWith('http') ? input : `https://${input}`;
           inputCompanyName = extractDomain(companyUrl);
         } else {
-          const found = await findCompanyWebsite(input, serperKey);
+          const found = await findCompanyWebsite(input, activeSerperKey);
           if (!found) {
             send({ type: 'error', message: `Could not find official website for "${input}". Please provide a direct website URL.` });
             controller.close();
@@ -52,7 +55,7 @@ export async function POST(req) {
         let searchData = {};
         try {
           const searchName = inputCompanyName.replace(/\.(com|org|net|io|co|ai|dev)$/i, '');
-          searchData = await searchCompanyInfo(searchName, serperKey);
+          searchData = await searchCompanyInfo(searchName, activeSerperKey);
           send({ type: 'progress', step: 2, message: 'Public search data collected', done: true });
         } catch (e) {
           send({ type: 'progress', step: 2, message: 'Public search limited', done: true });
@@ -81,7 +84,7 @@ export async function POST(req) {
         const analysis = await analyzeCompany(
           { crawledContent, searchResults: searchContent, inputUrl: companyUrl },
           model,
-          openrouterKey
+          activeOpenrouterKey
         );
         send({ type: 'progress', step: 5, message: 'AI synthesis complete', done: true });
 
@@ -89,13 +92,13 @@ export async function POST(req) {
         send({ type: 'progress', step: 6, message: 'Identifying & validating market competitors...' });
         try {
           const compName = analysis.companyName || inputCompanyName;
-          const compSearchResults = await searchCompetitors(compName, analysis.industry, serperKey);
+          const compSearchResults = await searchCompetitors(compName, analysis.industry, activeSerperKey);
 
           if (analysis.competitors) {
             await Promise.all(analysis.competitors.map(async (comp) => {
               if (!comp.website || !comp.website.startsWith('http')) {
                 try {
-                  const site = await findCompanyWebsite(comp.name, serperKey);
+                  const site = await findCompanyWebsite(comp.name, activeSerperKey);
                   if (site) comp.website = site;
                 } catch {}
               }

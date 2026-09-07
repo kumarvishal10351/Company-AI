@@ -1,7 +1,7 @@
 import { getAvailableModels } from '@/lib/openrouter';
 
 export async function GET(req) {
-  const apiKey = req.headers.get('x-api-key') || '';
+  const apiKey = req.headers.get('x-api-key') || process.env.OPENROUTER_API_KEY || process.env.MISTRAL_API_KEY || '';
 
   try {
     const models = await getAvailableModels(apiKey);

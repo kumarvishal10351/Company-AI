@@ -27,8 +27,8 @@ export default function Home() {
   const chatBottomRef = useRef(null);
 
   const [settings, setSettings] = useLocalStorage('research-api-settings', {
-    openrouterKey: 'fuuTdLfcqvoPp5vsEIdj4wo0uF0SOTux',
-    serperKey: 'ab51bc10-8e59-11f1-b66b-1527aaf279ed',
+    openrouterKey: '',
+    serperKey: '',
     model: 'mistral-large-latest',
   });
 
