@@ -29,7 +29,7 @@ export default function Home() {
   const [settings, setSettings] = useLocalStorage('research-api-settings', {
     openrouterKey: '',
     serperKey: '',
-    model: 'mistral-large-latest',
+    model: 'codestral-latest',
   });
 
   const [discordConfig, setDiscordConfig] = useLocalStorage('research-discord-config', {

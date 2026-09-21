@@ -77,11 +77,11 @@ export default function ApiSettings({ settings, onSave }) {
             API Keys & Authentication
           </h3>
 
-          {/* OpenRouter Key */}
+          {/* OpenRouter or Mistral Key */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[13px] font-semibold text-[#ECECF1]">
-                OpenRouter AI Provider Key
+                AI Provider Key (OpenRouter or Mistral AI)
               </label>
               <span className="text-[10px] text-[#10B981] font-mono bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
                 {form.openrouterKey ? 'KEY_CONFIGURED' : 'NOT_SET'}
@@ -90,7 +90,7 @@ export default function ApiSettings({ settings, onSave }) {
             <div className="relative">
               <input
                 type={showOpenRouterKey ? 'text' : 'password'}
-                placeholder="sk-or-v1-..."
+                placeholder="sk-or-v1-... or Mistral API key"
                 value={form.openrouterKey || ''}
                 onChange={(e) => update('openrouterKey', e.target.value)}
                 className="w-full bg-[#000000] border border-white/[0.08] rounded-xl py-2.5 pl-4 pr-10 text-[13px] font-mono text-[#ECECF1] placeholder-[#8E8EA0]/60 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-[#3B82F6]/20 transition-all"
@@ -106,7 +106,7 @@ export default function ApiSettings({ settings, onSave }) {
               </button>
             </div>
             <p className="text-[11px] text-[#8E8EA0]">
-              Powers multi-step company synthesis using any LLM on OpenRouter.
+              Accepts OpenRouter keys (<code className="text-white/80">sk-or-...</code>) or direct Mistral AI keys. Free-tier accounts automatically adapt to Codestral / 7B.
             </p>
           </div>
 
@@ -148,7 +148,7 @@ export default function ApiSettings({ settings, onSave }) {
         <div className="space-y-4 border-t border-white/[0.08] pt-5">
           <h3 className="text-[14px] font-bold text-[#ECECF1] flex items-center gap-2">
             <span className="material-symbols-outlined text-[#3B82F6]">psychology</span>
-            OpenRouter Synthesis Model Engine
+            Synthesis Model Engine
           </h3>
 
           <div className="space-y-2">
@@ -156,11 +156,13 @@ export default function ApiSettings({ settings, onSave }) {
               Active LLM Model Choice
             </label>
             <select
-              value={form.model || 'mistralai/mistral-large'}
+              value={form.model || 'codestral-latest'}
               onChange={(e) => update('model', e.target.value)}
               className="w-full bg-[#000000] border border-white/[0.08] rounded-xl py-2.5 px-4 text-[13px] text-[#ECECF1] focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-[#3B82F6]/20 transition-all cursor-pointer"
             >
-              <option value="mistralai/mistral-large">Mistral Large (OpenRouter)</option>
+              <option value="codestral-latest">Mistral Codestral (Free Tier Compatible / Recommended)</option>
+              <option value="open-mistral-7b">Mistral 7B (Free Tier Compatible)</option>
+              <option value="mistralai/mistral-large">Mistral Large (OpenRouter / Mistral AI)</option>
               <option value="google/gemini-2.0-flash-001">Google Gemini 2.0 Flash</option>
               <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini</option>
               <option value="openai/gpt-4o">OpenAI GPT-4o</option>

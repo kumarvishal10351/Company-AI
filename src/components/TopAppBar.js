@@ -41,7 +41,9 @@ export default function TopAppBar({
             onChange={(e) => setModel(e.target.value)}
             className="bg-[#212121] border border-white/[0.08] rounded-lg py-1.5 pl-3 pr-7 text-[12px] font-medium text-[#ececf1] hover:bg-[#2f2f2f] focus:outline-none transition-all cursor-pointer appearance-none"
           >
-            <option value="mistralai/mistral-large">Mistral Large (OpenRouter)</option>
+            <option value="codestral-latest">Mistral Codestral (Free Tier Compatible)</option>
+            <option value="open-mistral-7b">Mistral 7B (Free Tier Compatible)</option>
+            <option value="mistralai/mistral-large">Mistral Large (OpenRouter / Mistral AI)</option>
             <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
             <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
             <option value="openai/gpt-4o">GPT-4o</option>

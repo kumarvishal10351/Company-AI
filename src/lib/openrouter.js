@@ -2,13 +2,126 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MISTRAL_URL = 'https://api.mistral.ai/v1/chat/completions';
 const MODELS_URL = 'https://openrouter.ai/api/v1/models';
 
+function formatApiError(errorText) {
+  try {
+    const parsed = typeof errorText === 'string' ? JSON.parse(errorText) : errorText;
+    if (parsed.message) {
+      if (parsed.code === '1910' || parsed.type === 'tier_not_allowed') {
+        return 'The selected model is not available in your current API subscription tier. Please choose a free-tier model (such as Codestral or Mistral 7B) or upgrade your plan.';
+      }
+      return parsed.message;
+    }
+    if (parsed.error?.message) {
+      return parsed.error.message;
+    }
+  } catch {}
+  return typeof errorText === 'string' ? errorText : 'Failed to connect to AI provider';
+}
+
+function parseJsonResponse(content) {
+  if (!content) throw new Error('Empty AI response from LLM');
+  const jsonStr = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('Failed to parse AI response as JSON');
+  return JSON.parse(jsonMatch[0]);
+}
+
+async function callMistralDirect(messages, preferredModel, key) {
+  const mistralModelMap = {
+    'mistralai/mistral-large': 'mistral-large-latest',
+    'mistral-large': 'mistral-large-latest',
+    'mistral-large-latest': 'mistral-large-latest',
+    'mistralai/codestral-2501': 'codestral-latest',
+    'codestral-latest': 'codestral-latest',
+    'mistralai/mistral-small': 'mistral-small-latest',
+    'mistral-small-latest': 'mistral-small-latest',
+    'open-mistral-7b': 'open-mistral-7b',
+    'ministral-8b-latest': 'ministral-8b-latest',
+  };
+
+  const initialModel = mistralModelMap[preferredModel] || preferredModel || 'codestral-latest';
+  const candidateModels = [
+    initialModel,
+    'codestral-latest',
+    'open-mistral-7b',
+    'ministral-8b-latest',
+    'mistral-small-latest',
+  ].filter((item, index, self) => self.indexOf(item) === index);
+
+  let lastError = null;
+
+  for (const model of candidateModels) {
+    try {
+      const res = await fetch(MISTRAL_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.2,
+          max_tokens: 4096,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.text();
+        lastError = errorBody;
+        if (res.status === 401) {
+          // Bad API key, no need to retry models
+          break;
+        }
+        continue;
+      }
+
+      const result = await res.json();
+      const content = result.choices?.[0]?.message?.content;
+      return parseJsonResponse(content);
+    } catch (e) {
+      lastError = e.message;
+    }
+  }
+
+  throw new Error(`Mistral API Error: ${formatApiError(lastError)}`);
+}
+
+async function callOpenRouterDirect(messages, model, key) {
+  const res = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://company-research.vercel.app',
+      'X-Title': 'Relu Consultancy',
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.2,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(errorBody);
+  }
+
+  const result = await res.json();
+  const content = result.choices?.[0]?.message?.content;
+  return parseJsonResponse(content);
+}
+
 export async function analyzeCompany(data, model, apiKey) {
   const prompt = buildPrompt(data);
   const key = apiKey || process.env.OPENROUTER_API_KEY || process.env.MISTRAL_API_KEY;
 
   if (!key) throw new Error('AI API key is required');
 
-  const selectedModel = model || 'mistralai/mistral-large';
+  const selectedModel = model || 'codestral-latest';
 
   const messages = [
     {
@@ -18,77 +131,33 @@ export async function analyzeCompany(data, model, apiKey) {
     { role: 'user', content: prompt }
   ];
 
-  let res;
-  let lastError;
+  const isOpenRouterKey = key.startsWith('sk-or-');
 
-  // Primary OpenRouter endpoint supporting ANY OpenRouter AI model
-  try {
-    res = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://company-research.vercel.app',
-        'X-Title': 'Relu Consultancy',
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages,
-        temperature: 0.2,
-        max_tokens: 4096,
-      }),
-    });
-
-    if (!res.ok) {
-      lastError = await res.text();
-      res = null;
-    }
-  } catch (e) {
-    lastError = e.message;
-    res = null;
-  }
-
-  // Resilient fallback to direct Mistral API if OpenRouter key returns 404/error
-  if (!res) {
+  // Route intelligently based on key signature
+  if (isOpenRouterKey) {
     try {
-      res = await fetch(MISTRAL_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'mistral-large-latest',
-          messages,
-          temperature: 0.2,
-          response_format: { type: 'json_object' }
-        }),
-      });
-      if (!res.ok) {
-        lastError = await res.text();
-        res = null;
+      return await callOpenRouterDirect(messages, selectedModel, key);
+    } catch (orErr) {
+      // Fallback to Mistral API if OpenRouter fails
+      try {
+        return await callMistralDirect(messages, selectedModel, key);
+      } catch {
+        throw new Error(`AI API Error: ${formatApiError(orErr.message)}`);
       }
-    } catch (e) {
-      lastError = e.message;
-      res = null;
+    }
+  } else {
+    // Non-OpenRouter key (Mistral API key or other direct provider key)
+    try {
+      return await callMistralDirect(messages, selectedModel, key);
+    } catch (mistralErr) {
+      // Fallback attempt to OpenRouter in case of custom key format
+      try {
+        return await callOpenRouterDirect(messages, selectedModel, key);
+      } catch {
+        throw new Error(`AI API Error: ${formatApiError(mistralErr.message)}`);
+      }
     }
   }
-
-  if (!res || !res.ok) {
-    throw new Error(`AI API Error: ${lastError || 'Failed to connect to AI provider'}`);
-  }
-
-  const result = await res.json();
-  const content = result.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Empty AI response from LLM');
-
-  // Extract JSON from response
-  const jsonStr = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Failed to parse AI response as JSON');
-
-  return JSON.parse(jsonMatch[0]);
 }
 
 function buildPrompt(data) {
@@ -145,6 +214,8 @@ export async function getAvailableModels(apiKey) {
 
     const data = await res.json();
     const popular = [
+      'codestral-latest',
+      'open-mistral-7b',
       'mistralai/mistral-large',
       'google/gemini-2.0-flash-001',
       'openai/gpt-4o-mini',
@@ -171,7 +242,9 @@ export async function getAvailableModels(apiKey) {
     return models || [];
   } catch {
     return [
-      { id: 'mistralai/mistral-large', name: 'Mistral Large (OpenRouter)', isPopular: true },
+      { id: 'codestral-latest', name: 'Mistral Codestral (Free Tier Compatible)', isPopular: true },
+      { id: 'open-mistral-7b', name: 'Mistral 7B (Free Tier Compatible)', isPopular: true },
+      { id: 'mistralai/mistral-large', name: 'Mistral Large (OpenRouter / Mistral AI)', isPopular: true },
       { id: 'google/gemini-2.0-flash-001', name: 'Google Gemini 2.0 Flash', isPopular: true },
       { id: 'openai/gpt-4o-mini', name: 'OpenAI GPT-4o Mini', isPopular: true },
       { id: 'openai/gpt-4o', name: 'OpenAI GPT-4o', isPopular: true },

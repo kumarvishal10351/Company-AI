@@ -19,7 +19,7 @@ export async function POST(req) {
   const activeSerperKey = serperKey || process.env.SERPER_API_KEY;
 
   if (!input?.trim()) return Response.json({ error: 'Company Name or Website URL is required' }, { status: 400 });
-  if (!activeOpenrouterKey) return Response.json({ error: 'OpenRouter API key is required. Please provide it in Settings or configure OPENROUTER_API_KEY.' }, { status: 400 });
+  if (!activeOpenrouterKey) return Response.json({ error: 'AI API key (OpenRouter or Mistral AI) is required. Please provide it in Settings or configure OPENROUTER_API_KEY or MISTRAL_API_KEY.' }, { status: 400 });
   if (!activeSerperKey) return Response.json({ error: 'Serper API key is required. Please provide it in Settings or configure SERPER_API_KEY.' }, { status: 400 });
 
   const encoder = new TextEncoder();
